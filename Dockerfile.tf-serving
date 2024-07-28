@@ -1,0 +1,11 @@
+# use tensorflow serving base image
+FROM tensorflow/serving:2.7.0
+
+# copy model to the container
+COPY model /models/model
+
+# set environment variable for model name
+ENV MODEL_NAME=model
+
+# expose port
+EXPOSE 8501
