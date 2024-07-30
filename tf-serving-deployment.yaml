@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: tf-serving-container
-        image: tf-serving:latest
+        image: adi3008/tf-serving:latest
         ports:
         - containerPort: 8501
 ---
