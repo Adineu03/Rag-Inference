@@ -85,7 +85,89 @@ docker run -d --name tf-serving --mount type=bind,source=$(pwd)/model,target=/mo
 ```bash
 docker run -d --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.10.1
 ```
-## 3. Load Data into Elasticsearch
+## 3. Kubernetes Deployment(instead going with docker)
+
+**1. Deploy TensorFlow Serving**
+Create the Kubernetes deployment and service for TensorFlow Serving:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf-serving-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tf-serving
+  template:
+    metadata:
+      labels:
+        app: tf-serving
+    spec:
+      containers:
+      - name: tf-serving-container
+        image: adi3008/tf-serving:latest
+        ports:
+        - containerPort: 8501
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tf-serving-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 8501
+    targetPort: 8501
+  selector:
+    app: tf-serving
+```
+**2. Deploy ElasticSearch**
+Create the Kubernetes deployment and service for ElasticSearch:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+        ports:
+        - containerPort: 9200
+        env:
+        - name: discovery.type
+          value: single-node
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-service
+spec:
+  ports:
+  - port: 9200
+  selector:
+    app: elasticsearch
+```
+Applying and Port-Forwarding
+```bash
+kubectl apply -f tf-serving-deployment.yaml -n rag-inference
+kubectl apply -f elasticsearch.yaml -n rag-inference
+
+kubectl port-forward svc/elasticsearch-service 9200:9200
+kubectl port-forward svc/tf-serving-service 8501:8501
+```
+
+## 4. Load Data into Elasticsearch
 
 After setting up Elasticsearch, load data into it using the `load_data.py` script. This script is designed to populate your Elasticsearch index with the necessary data for retrieval tasks.
 Here is the script:
@@ -112,7 +194,7 @@ To run the script, use the following command:
 python load_data.py
 ```
 
-## 4. Run RAG Inference
+## 5. Run RAG Inference
 
 Once the data is loaded into Elasticsearch, you can perform Retrieval-Augmented Generation (RAG) inference using the `rag_inference.py` script. This script interacts with both Elasticsearch and TensorFlow Serving to generate responses based on the user query.
 Here is the script:
@@ -161,7 +243,7 @@ To run the inference, use the following command:
 ```bash
 python rag_inference.py
 ```
-## 5. Result 
+## 6. Result 
 ![image](https://github.com/user-attachments/assets/3e1d833a-c982-4dda-8aac-25276b455ddc)
 
 ## Pipeline Setup
