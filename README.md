@@ -260,30 +260,36 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+# Step 1: Build and push TensorFlow Serving Docker image
 - task: Docker@2
   inputs:
     command: 'buildAndPush'
     containerRegistry: 'dockerhub'
     repository: 'adi3008/tf-serving'
-    Dockerfile: 'Dockerfile'
+    Dockerfile: 'Dockerfile.tf-serving'
     tags: 'latest'
 
-- script: |
-    docker run -d --name tf-serving --mount type=bind,source="$(pwd)/model",target=/models/model -e MODEL_NAME=model -p 8501:8501 tf-serving
-  displayName: 'Run TensorFlow Serving container'
+# # Step 2: Run TensorFlow Serving container
+# - script: |
+#     docker run -d --name tf-serving --mount type=bind,source=$(pwd)/model,target=/models/model -e MODEL_NAME=model -p 8501:8501 adi3008/tf-serving:latest
+#   displayName: 'Run TensorFlow Serving container'
 
-- script: |
-    docker run -d --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.10.1
-  displayName: 'Run Elasticsearch container'
+# # Step 3: Run Elasticsearch container
+# - script: |
+#     docker run -d --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+#   displayName: 'Run Elasticsearch container'
 
+# Step 4: Deploy TensorFlow Serving to Kubernetes (Optional if you need to deploy in Kubernetes)
 - task: Kubernetes@1
   inputs:
     connectionType: 'Kubernetes Service Connection'
-    kubernetesServiceEndpoint: '<your-kubernetes-service-connection>'
+    kubernetesServiceEndpoint: 'minikube'
     namespace: 'default'
     command: 'apply'
-    arguments: '-f k8s/tf-serving-deployment.yaml -f k8s/elasticsearch-deployment.yaml'
+    arguments: '-f k8s/tf-serving-deployment.yaml'
+  displayName: 'Deploy TensorFlow Serving to Kubernetes'
 
+# Step 5: Run data loading script
 - task: AzureCLI@2
   inputs:
     azureSubscription: 'adi3008'
@@ -291,7 +297,9 @@ steps:
     scriptPath: 'scripts/load_data.sh'
     arguments: ''
     workingDirectory: 'scripts'
+  displayName: 'Run data loading script'
 
+# Step 6: Run inference script
 - task: AzureCLI@2
   inputs:
     azureSubscription: 'adi3008'
@@ -299,6 +307,7 @@ steps:
     scriptPath: 'scripts/rag_inference.sh'
     arguments: ''
     workingDirectory: 'scripts'
+  displayName: 'Run inference script'
 ```
 
 ## Usage
