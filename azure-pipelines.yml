@@ -14,15 +14,15 @@ steps:
     Dockerfile: 'Dockerfile.tf-serving'
     tags: 'latest'
 
-# Step 2: Run TensorFlow Serving container
-- script: |
-    docker run -d --name tf-serving --mount type=bind,source=$(pwd)/model,target=/models/model -e MODEL_NAME=model -p 8501:8501 adi3008/tf-serving:latest
-  displayName: 'Run TensorFlow Serving container'
+# # Step 2: Run TensorFlow Serving container
+# - script: |
+#     docker run -d --name tf-serving --mount type=bind,source=$(pwd)/model,target=/models/model -e MODEL_NAME=model -p 8501:8501 adi3008/tf-serving:latest
+#   displayName: 'Run TensorFlow Serving container'
 
-# Step 3: Run Elasticsearch container
-- script: |
-    docker run -d --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.10.1
-  displayName: 'Run Elasticsearch container'
+# # Step 3: Run Elasticsearch container
+# - script: |
+#     docker run -d --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+#   displayName: 'Run Elasticsearch container'
 
 # Step 4: Deploy TensorFlow Serving to Kubernetes (Optional if you need to deploy in Kubernetes)
 - task: Kubernetes@1
