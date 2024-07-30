@@ -158,7 +158,7 @@ spec:
   selector:
     app: elasticsearch
 ```
-Applying and Port-Forwarding
+Applying and Port-Forwarding(in case of minikube)
 ```bash
 kubectl apply -f tf-serving-deployment.yaml -n rag-inference
 kubectl apply -f elasticsearch.yaml -n rag-inference
